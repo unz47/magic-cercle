@@ -1,6 +1,7 @@
 import { Renderer } from './three/Renderer'
 import { PostProcessing } from './three/PostProcessing'
 import { RingLayer } from './layers/geometric/RingLayer'
+import type { RingParams } from '../store/useSigilStore'
 
 /**
  * SigilEngine — Three.js のライフサイクルを一元管理
@@ -15,9 +16,10 @@ export class SigilEngine {
   private clock = { start: performance.now() }
 
   // レイヤー
-  private ring1: RingLayer
-  private ring2: RingLayer
-  private ring3: RingLayer
+  private rings: [RingLayer, RingLayer, RingLayer]
+
+  // 現在の速度（ストアから同期）
+  private speeds: [number, number, number] = [0.5, -0.8, 1.2]
 
   constructor(canvas: HTMLCanvasElement) {
     // 1) Renderer (Scene + Camera + WebGLRenderer)
@@ -31,29 +33,34 @@ export class SigilEngine {
     )
 
     // 3) レイヤーを作ってシーンに追加
-    this.ring1 = new RingLayer({
-      radius: 1.8,
-      thickness: 3,
-      color: '#00ffcc',
-    })
-    this.ring2 = new RingLayer({
-      radius: 1.3,
-      thickness: 2,
-      color: '#ff44aa',
-    })
-    this.ring3 = new RingLayer({
-      radius: 0.7,
-      thickness: 4,
-      color: '#4488ff',
-    })
+    this.rings = [
+      new RingLayer({ radius: 1.8, thickness: 3, color: '#ffffffff' }),
+      new RingLayer({ radius: 1.3, thickness: 2, color: '#ffffffff' }),
+      new RingLayer({ radius: 0.7, thickness: 4, color: '#ffffffff' }),
+    ]
 
-    this.renderer.scene.add(this.ring1.group)
-    this.renderer.scene.add(this.ring2.group)
-    this.renderer.scene.add(this.ring3.group)
+    for (const ring of this.rings) {
+      this.renderer.scene.add(ring.group)
+    }
 
     // 4) 初期リサイズ + アニメーション開始
     this.resize()
     this.animate()
+  }
+
+  /** ストアの状態を Three.js に反映 */
+  updateConfig(
+    ringParams: [RingParams, RingParams, RingParams],
+    bloomStrength: number,
+  ) {
+    for (let i = 0; i < 3; i++) {
+      const p = ringParams[i]
+      this.rings[i].setRadius(p.radius)
+      this.rings[i].setThickness(p.thickness)
+      this.rings[i].setColor(p.color)
+      this.speeds[i] = p.speed
+    }
+    this.postProcessing.setBloomStrength(bloomStrength)
   }
 
   /** canvas サイズに合わせてリサイズ */
@@ -67,9 +74,9 @@ export class SigilEngine {
 
     this.renderer.resize(w, h)
     this.postProcessing.setSize(w, h)
-    this.ring1.setResolution(w, h)
-    this.ring2.setResolution(w, h)
-    this.ring3.setResolution(w, h)
+    for (const ring of this.rings) {
+      ring.setResolution(w, h)
+    }
   }
 
   /** アニメーションループ */
@@ -79,9 +86,9 @@ export class SigilEngine {
     const elapsed = (performance.now() - this.clock.start) / 1000
 
     // 各リングを異なる速度で回転
-    this.ring1.update(elapsed * 0.5)
-    this.ring2.update(elapsed * -0.8)
-    this.ring3.update(elapsed * 1.2)
+    this.rings[0].update(elapsed * this.speeds[0])
+    this.rings[1].update(elapsed * this.speeds[1])
+    this.rings[2].update(elapsed * this.speeds[2])
 
     // Bloom 付きでレンダリング
     this.postProcessing.render()
@@ -90,9 +97,9 @@ export class SigilEngine {
   /** クリーンアップ */
   dispose() {
     cancelAnimationFrame(this.animationId)
-    this.ring1.dispose()
-    this.ring2.dispose()
-    this.ring3.dispose()
+    for (const ring of this.rings) {
+      ring.dispose()
+    }
     this.postProcessing.dispose()
     this.renderer.dispose()
   }

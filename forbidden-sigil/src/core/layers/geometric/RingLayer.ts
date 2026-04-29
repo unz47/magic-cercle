@@ -70,6 +70,35 @@ export class RingLayer {
     return positions
   }
 
+  /** ジオメトリを再構築（半径変更時） */
+  private rebuildGeometry() {
+    const positions = this.createCirclePositions()
+    this.line.geometry.dispose()
+    const geometry = new LineGeometry()
+    geometry.setPositions(positions)
+    this.line.geometry = geometry
+    this.line.computeLineDistances()
+  }
+
+  /** 半径を変更 */
+  setRadius(radius: number) {
+    if (this.config.radius === radius) return
+    this.config.radius = radius
+    this.rebuildGeometry()
+  }
+
+  /** 線の太さを変更 */
+  setThickness(thickness: number) {
+    this.config.thickness = thickness
+    this.material.linewidth = thickness
+  }
+
+  /** 色を変更 */
+  setColor(color: string) {
+    this.config.color = color
+    this.material.color.set(color)
+  }
+
   /** 解像度変更時に呼ぶ（LineMaterial が内部で解像度を使う） */
   setResolution(width: number, height: number) {
     this.material.resolution.set(width, height)
