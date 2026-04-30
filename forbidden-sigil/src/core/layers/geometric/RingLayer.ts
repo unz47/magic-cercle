@@ -2,115 +2,126 @@ import * as THREE from 'three'
 import { Line2 } from 'three/examples/jsm/lines/Line2.js'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
+import type { ILayer } from '../ILayer'
 
-export interface RingConfig {
-  radius: number      // 0.5 〜 3
-  thickness: number   // 1 〜 8 (px)
-  color: string       // hex e.g. '#00ffcc'
-  segments: number    // 円の分割数（64で十分滑らか）
-}
-
-const DEFAULT_RING: RingConfig = {
-  radius: 1.5,
-  thickness: 3,
-  color: '#00ffcc',
-  segments: 128,
-}
+const SEGMENTS = 128
 
 /**
- * RingLayer — Line2 で太線の円を描画する
- *
- * Three.js 標準の LineBasicMaterial は太さ1px固定なので、
- * Line2 (LineMaterial) を使って太い線を描く。
+ * RingLayer — 円環（破線・二重線対応）
  */
-export class RingLayer {
-  readonly group: THREE.Group
-  private line: Line2
-  private material: LineMaterial
-  private config: RingConfig
+export class RingLayer implements ILayer {
+  readonly group = new THREE.Group()
+  private lines: Line2[] = []
+  private materials: LineMaterial[] = []
+  private _radius = 1.5
+  private _thickness = 3
+  private _color = '#ffffff'
+  private _dashed = false
+  private _dashScale = 10
+  private _double = false
+  private _doubleGap = 0.15
+  private _resolution = new THREE.Vector2(1, 1)
 
-  constructor(config: Partial<RingConfig> = {}) {
-    this.config = { ...DEFAULT_RING, ...config }
-    this.group = new THREE.Group()
-
-    // 円の頂点を生成
-    const positions = this.createCirclePositions()
-
-    // LineGeometry
-    const geometry = new LineGeometry()
-    geometry.setPositions(positions)
-
-    // LineMaterial — 太線 + emissive な見た目
-    this.material = new LineMaterial({
-      color: new THREE.Color(this.config.color).getHex(),
-      linewidth: this.config.thickness,
-      worldUnits: false, // スクリーンスペース（px単位）
-      alphaToCoverage: true,
-    })
-
-    this.line = new Line2(geometry, this.material)
-    this.line.computeLineDistances()
-    this.group.add(this.line)
+  constructor(radius = 1.5, thickness = 3, color = '#ffffff') {
+    this._radius = radius
+    this._thickness = thickness
+    this._color = color
+    this.rebuild()
   }
 
-  /** 円周上の点を flat array [x,y,z, x,y,z, ...] で返す */
-  private createCirclePositions(): number[] {
-    const { radius, segments } = this.config
+  private buildCircle(radius: number): number[] {
     const positions: number[] = []
-
-    for (let i = 0; i <= segments; i++) {
-      const theta = (i / segments) * Math.PI * 2
-      positions.push(
-        Math.cos(theta) * radius,
-        0,  // Y=0 平面上に描画
-        Math.sin(theta) * radius,
-      )
+    for (let i = 0; i <= SEGMENTS; i++) {
+      const theta = (i / SEGMENTS) * Math.PI * 2
+      positions.push(Math.cos(theta) * radius, 0, Math.sin(theta) * radius)
     }
-
     return positions
   }
 
-  /** ジオメトリを再構築（半径変更時） */
-  private rebuildGeometry() {
-    const positions = this.createCirclePositions()
-    this.line.geometry.dispose()
-    const geometry = new LineGeometry()
-    geometry.setPositions(positions)
-    this.line.geometry = geometry
-    this.line.computeLineDistances()
+  private rebuild() {
+    // 既存を除去
+    for (const line of this.lines) {
+      this.group.remove(line)
+      line.geometry.dispose()
+    }
+    for (const mat of this.materials) mat.dispose()
+    this.lines = []
+    this.materials = []
+
+    const radii = this._double
+      ? [this._radius - this._doubleGap / 2, this._radius + this._doubleGap / 2]
+      : [this._radius]
+
+    for (const r of radii) {
+      const mat = new LineMaterial({
+        color: new THREE.Color(this._color).getHex(),
+        linewidth: this._thickness,
+        worldUnits: false,
+        alphaToCoverage: true,
+        dashed: this._dashed,
+        dashScale: this._dashScale,
+        dashSize: 1,
+        gapSize: 0.5,
+      })
+      mat.resolution.copy(this._resolution)
+      this.materials.push(mat)
+
+      const geo = new LineGeometry()
+      geo.setPositions(this.buildCircle(r))
+      const line = new Line2(geo, mat)
+      line.computeLineDistances()
+      this.lines.push(line)
+      this.group.add(line)
+    }
   }
 
-  /** 半径を変更 */
-  setRadius(radius: number) {
-    if (this.config.radius === radius) return
-    this.config.radius = radius
-    this.rebuildGeometry()
+  applyConfig(c: Record<string, unknown>) {
+    let needsRebuild = false
+
+    if (c.radius !== undefined && c.radius !== this._radius) {
+      this._radius = c.radius as number; needsRebuild = true
+    }
+    if (c.dashed !== undefined && c.dashed !== this._dashed) {
+      this._dashed = c.dashed as boolean; needsRebuild = true
+    }
+    if (c.dashScale !== undefined && c.dashScale !== this._dashScale) {
+      this._dashScale = c.dashScale as number; needsRebuild = true
+    }
+    if (c.double !== undefined && c.double !== this._double) {
+      this._double = c.double as boolean; needsRebuild = true
+    }
+    if (c.doubleGap !== undefined && c.doubleGap !== this._doubleGap) {
+      this._doubleGap = c.doubleGap as number; needsRebuild = true
+    }
+
+    if (needsRebuild) {
+      if (c.thickness !== undefined) this._thickness = c.thickness as number
+      if (c.color !== undefined) this._color = c.color as string
+      this.rebuild()
+    } else {
+      if (c.thickness !== undefined) {
+        this._thickness = c.thickness as number
+        for (const mat of this.materials) mat.linewidth = this._thickness
+      }
+      if (c.color !== undefined) {
+        this._color = c.color as string
+        for (const mat of this.materials) mat.color.set(this._color)
+      }
+    }
+    if (c.visible !== undefined) this.group.visible = c.visible as boolean
   }
 
-  /** 線の太さを変更 */
-  setThickness(thickness: number) {
-    this.config.thickness = thickness
-    this.material.linewidth = thickness
+  setResolution(w: number, h: number) {
+    this._resolution.set(w, h)
+    for (const mat of this.materials) mat.resolution.set(w, h)
   }
 
-  /** 色を変更 */
-  setColor(color: string) {
-    this.config.color = color
-    this.material.color.set(color)
-  }
-
-  /** 解像度変更時に呼ぶ（LineMaterial が内部で解像度を使う） */
-  setResolution(width: number, height: number) {
-    this.material.resolution.set(width, height)
-  }
-
-  /** フレームごとに呼ばれる（回転アニメーション） */
   update(time: number) {
     this.group.rotation.y = time * 0.3
   }
 
   dispose() {
-    this.line.geometry.dispose()
-    this.material.dispose()
+    for (const line of this.lines) line.geometry.dispose()
+    for (const mat of this.materials) mat.dispose()
   }
 }

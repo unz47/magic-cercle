@@ -22,7 +22,7 @@ export class PostProcessing {
     // 2) Bloom — 魔法陣の光を滲ませる
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.5,   // strength — グロー強度
+      0.3,   // strength — グロー強度
       0.4,   // radius — グロー半径
       0.1,   // threshold — 光る閾値（低いほど全体が光る）
     )
