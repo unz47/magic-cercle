@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { SigilCanvas } from './ui/components/SigilCanvas'
 import { ControlPanel } from './ui/components/ControlPanel'
+import { EffectPanel } from './ui/components/EffectPanel'
 
 function App() {
   const [panelOpen, setPanelOpen] = useState(true)
@@ -16,10 +17,11 @@ function App() {
           className="menu-toggle"
           onClick={() => setPanelOpen(!panelOpen)}
         >
-          {panelOpen ? 'Hide Panel' : 'Show Panel'}
+          {panelOpen ? 'Hide UI' : 'Show UI'}
         </button>
       </div>
 
+      {panelOpen && <EffectPanel />}
       {panelOpen && <ControlPanel />}
     </div>
   )

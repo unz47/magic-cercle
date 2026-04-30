@@ -75,7 +75,112 @@ body {
   color: #fff;
 }
 
-/* ── Control Panel ── */
+/* ── Effect Panel (左側) ── */
+.effect-panel {
+  position: absolute;
+  top: 52px;
+  left: 16px;
+  width: 220px;
+  max-height: calc(100dvh - 68px);
+  overflow-y: auto;
+  background: rgba(10, 10, 25, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  color: #ccc;
+  font-size: 13px;
+}
+
+.effect-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.effect-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.effect-group {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0 0 8px;
+}
+
+.effect-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.effect-toggle input[type='checkbox'] {
+  accent-color: #aa66ff;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+.effect-name {
+  font-weight: 600;
+  font-size: 12px;
+  color: #ddd;
+}
+
+.effect-label {
+  font-size: 10px;
+  color: #666;
+  margin-left: auto;
+}
+
+.effect-group label:not(.effect-toggle) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #999;
+}
+
+.effect-group input[type='range'] {
+  flex: 1;
+  max-width: 100px;
+  accent-color: #aa66ff;
+  height: 4px;
+}
+
+.effect-group input[type='color'] {
+  width: 28px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Section title ── */
+.panel-section {
+  margin-bottom: 8px;
+}
+
+.panel-section + .panel-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+}
+
+.section-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Control Panel (右側) ── */
 .control-panel {
   position: absolute;
   top: 52px;

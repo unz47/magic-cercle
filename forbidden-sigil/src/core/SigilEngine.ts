@@ -3,8 +3,9 @@ import { Renderer } from './three/Renderer'
 import { PostProcessing } from './three/PostProcessing'
 import type { ILayer } from './layers/ILayer'
 import type { LayerConfig } from '../store/layerConfigs'
-import type { GlobalSettings } from '../store/useSigilStore'
+import type { GlobalSettings, EffectSettings, ParticleSettings, ParticleKey } from '../store/useSigilStore'
 import { createLayer } from './layers/createLayer'
+import { ParticleSystem } from './particles/ParticleSystem'
 
 /**
  * SigilEngine — Three.js のライフサイクルを一元管理
@@ -21,6 +22,10 @@ export class SigilEngine {
 
   /** id → { layer, type, speed } */
   private layerMap = new Map<string, { layer: ILayer; type: string; speed: number }>()
+
+  /** パーティクルシステム */
+  private particleMap = new Map<ParticleKey, ParticleSystem>()
+  private particleSettings: ParticleSettings | null = null
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new Renderer(canvas)
@@ -86,7 +91,8 @@ export class SigilEngine {
       g.visible = config.visible
       g.position.y = config.yOffset
       g.scale.setScalar(config.scale)
-      // rotationOffset は Z 軸に適用（Y は speed 回転で使用）
+      // Z 傾き → Y スピン回転の順で適用（傾いた軸基準で回転させる）
+      g.rotation.order = 'ZXY'
       g.rotation.z = (config.rotationOffset * Math.PI) / 180
     }
   }
@@ -108,6 +114,39 @@ export class SigilEngine {
       Math.cos(theta) * xzDist,
     )
     this.renderer.camera.lookAt(0, 0, 0)
+  }
+
+  /** エフェクト設定を反映 */
+  syncEffects(effects: EffectSettings) {
+    this.postProcessing.syncEffects(effects)
+  }
+
+  /** パーティクル設定を反映 */
+  syncParticles(settings: ParticleSettings) {
+    this.particleSettings = settings
+    const keys: ParticleKey[] = ['risingSparks', 'dust', 'orbital', 'fireflies', 'energyMist', 'fallingAsh']
+
+    for (const key of keys) {
+      const cfg = settings[key]
+      const existing = this.particleMap.get(key)
+
+      if (cfg.enabled) {
+        if (!existing) {
+          // 新規作成
+          const ps = new ParticleSystem(key, cfg.count, cfg.size, cfg.color)
+          this.renderer.scene.add(ps.group)
+          this.particleMap.set(key, ps)
+        } else {
+          // 設定更新
+          existing.applyConfig(cfg)
+        }
+      } else if (existing) {
+        // 無効化 → 削除
+        this.renderer.scene.remove(existing.group)
+        existing.dispose()
+        this.particleMap.delete(key)
+      }
+    }
   }
 
   /** canvas サイズに合わせてリサイズ */
@@ -135,6 +174,16 @@ export class SigilEngine {
       layer.update(elapsed * speed)
     }
 
+    // パーティクル更新
+    if (this.particleSettings) {
+      for (const [key, ps] of this.particleMap) {
+        const cfg = this.particleSettings[key]
+        const spread = 'spread' in cfg ? (cfg as { spread: number }).spread : 2
+        const radius = 'radius' in cfg ? (cfg as { radius: number }).radius : undefined
+        ps.update(elapsed, cfg.speed, spread, radius)
+      }
+    }
+
     this.postProcessing.render()
   }
 
@@ -145,6 +194,10 @@ export class SigilEngine {
       layer.dispose()
     }
     this.layerMap.clear()
+    for (const ps of this.particleMap.values()) {
+      ps.dispose()
+    }
+    this.particleMap.clear()
     this.postProcessing.dispose()
     this.renderer.dispose()
   }

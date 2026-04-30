@@ -11,6 +11,8 @@ export function SigilCanvas() {
 
   const layers = useSigilStore((s) => s.layers)
   const global = useSigilStore((s) => s.global)
+  const effects = useSigilStore((s) => s.effects)
+  const particles = useSigilStore((s) => s.particles)
   const setGlobal = useSigilStore((s) => s.setGlobal)
 
   // マウント/アンマウント
@@ -39,6 +41,14 @@ export function SigilCanvas() {
   useEffect(() => {
     engineRef.current?.syncGlobal(global)
   }, [global])
+
+  useEffect(() => {
+    engineRef.current?.syncEffects(effects)
+  }, [effects])
+
+  useEffect(() => {
+    engineRef.current?.syncParticles(particles)
+  }, [particles])
 
   // ドラッグでカメラ操作（上下=仰角、左右=水平角）
   const onPointerDown = useCallback((e: React.PointerEvent) => {
