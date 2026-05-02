@@ -41,6 +41,8 @@ export interface SigilState {
   removeLayer: (id: string) => void
   updateLayer: (id: string, patch: Record<string, unknown>) => void
   reorderLayer: (id: string, direction: 'up' | 'down') => void
+  duplicateLayer: (id: string) => void
+  randomizeLayers: () => void
 
   // グローバル
   setGlobal: (patch: Partial<GlobalSettings>) => void
@@ -114,6 +116,82 @@ export const useSigilStore = create<SigilState>((set) => ({
       if (swap < 0 || swap >= layers.length) return state
       ;[layers[idx], layers[swap]] = [layers[swap], layers[idx]]
       return { layers }
+    }),
+
+  duplicateLayer: (id) =>
+    set((state) => {
+      const source = state.layers.find((l) => l.id === id)
+      if (!source) return state
+      const copy = { ...source, id: `${source.type}-dup-${Date.now()}` } as LayerConfig
+      const idx = state.layers.indexOf(source)
+      const layers = [...state.layers]
+      layers.splice(idx + 1, 0, copy)
+      return { layers }
+    }),
+
+  randomizeLayers: () =>
+    set(() => {
+      const types: LayerType[] = [
+        'ring', 'polygon', 'starPolygon', 'spokes',
+        'concentricRings', 'vertexMarks', 'crescent',
+        'dotChain', 'wavePattern', 'spiralArm',
+        'pulseRings', 'runeRing',
+      ]
+      const pick = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]
+      const rand = (min: number, max: number) => min + Math.random() * (max - min)
+
+      // 3〜7 レイヤーをランダム生成
+      const count = 3 + Math.floor(Math.random() * 5)
+      const layers: LayerConfig[] = []
+
+      // 必ず外周リングを含める
+      const outerRing = LAYER_DEFAULTS.ring()
+      outerRing.radius = 1.6 + Math.random() * 0.6
+      outerRing.thickness = 2 + Math.floor(Math.random() * 3)
+      outerRing.speed = rand(-0.8, 0.8)
+      outerRing.dashed = Math.random() > 0.6
+      outerRing.double = Math.random() > 0.5
+      layers.push(outerRing)
+
+      for (let i = 1; i < count; i++) {
+        const type = pick(types)
+        const config = LAYER_DEFAULTS[type]() as LayerConfig
+        const c = config as unknown as Record<string, unknown>
+
+        // 共通パラメータをランダマイズ
+        c.speed = rand(-1, 1)
+        c.rotationOffset = Math.floor(rand(0, 360))
+        c.scale = rand(0.6, 1.4)
+
+        // 半径系をばらけさせる
+        if ('radius' in c && typeof c.radius === 'number') {
+          c.radius = rand(0.4, 2.0)
+        }
+        if ('outerRadius' in c && typeof c.outerRadius === 'number') {
+          c.outerRadius = rand(1.0, 2.2)
+        }
+
+        // ランダム色（ゴールド〜ブルー〜パープル系）
+        const hue = pick([40, 60, 200, 220, 260, 280, 300])
+        const sat = 50 + Math.floor(Math.random() * 50)
+        const lit = 50 + Math.floor(Math.random() * 30)
+        c.color = `hsl(${hue}, ${sat}%, ${lit}%)`
+
+        layers.push(config)
+      }
+
+      // ランダムな背景色
+      const bgHue = Math.floor(Math.random() * 360)
+      return {
+        layers,
+        global: {
+          bloomStrength: rand(0.2, 1.2),
+          bgColor: `hsl(${bgHue}, 30%, 3%)`,
+          cameraDistance: rand(4, 7),
+          cameraAngle: rand(30, 60),
+          cameraAzimuth: rand(-30, 30),
+        },
+      }
     }),
 
   setGlobal: (patch) =>

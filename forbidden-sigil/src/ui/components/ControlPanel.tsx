@@ -332,6 +332,8 @@ export function ControlPanel() {
   const removeLayer = useSigilStore((s) => s.removeLayer)
   const updateLayer = useSigilStore((s) => s.updateLayer)
   const reorderLayer = useSigilStore((s) => s.reorderLayer)
+  const duplicateLayer = useSigilStore((s) => s.duplicateLayer)
+  const randomizeLayers = useSigilStore((s) => s.randomizeLayers)
   const setGlobal = useSigilStore((s) => s.setGlobal)
 
   return (
@@ -350,7 +352,7 @@ export function ControlPanel() {
         </label>
       </fieldset>
 
-      {/* レイヤー追加 */}
+      {/* レイヤー追加 + ランダム */}
       <div className="add-layer">
         <select defaultValue=""
           onChange={(e) => {
@@ -364,6 +366,9 @@ export function ControlPanel() {
             <option key={t} value={t}>{LAYER_LABELS[t]}</option>
           ))}
         </select>
+        <button className="randomize-btn" onClick={randomizeLayers}>
+          Random Generate
+        </button>
       </div>
 
       {/* レイヤー一覧 */}
@@ -380,6 +385,7 @@ export function ControlPanel() {
               onClick={() => updateLayer(layer.id, { visible: !layer.visible })}>
               {layer.visible ? '👁' : '—'}
             </button>
+            <button onClick={() => duplicateLayer(layer.id)} title="Duplicate">⧉</button>
             <button className="layer-delete" onClick={() => removeLayer(layer.id)}>✕</button>
           </div>
 
