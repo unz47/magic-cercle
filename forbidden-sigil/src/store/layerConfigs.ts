@@ -125,6 +125,17 @@ export interface FloatingOrbsConfig extends LayerBase {
   pulseSpeed: number
 }
 
+/** RuneRing — 円弧に沿った文字列 */
+export interface RuneRingConfig extends LayerBase {
+  type: 'runeRing'
+  text: string
+  radius: number
+  fontSize: number      // 12〜60
+  font: string
+  reverse: boolean      // 逆方向配置
+  mapping: string       // 変換マッピング名 ('none' | 'elderFuthark' | ...)
+}
+
 /** 全レイヤー設定の判別共用体 */
 export type LayerConfig =
   | RingConfig
@@ -139,6 +150,7 @@ export type LayerConfig =
   | SpiralArmConfig
   | PulseRingsConfig
   | FloatingOrbsConfig
+  | RuneRingConfig
 
 /** レイヤー種別 */
 export type LayerType = LayerConfig['type']
@@ -280,6 +292,18 @@ export const LAYER_DEFAULTS: Record<LayerType, () => LayerConfig> = {
     orbSize: 0.06,
     pulseSpeed: 1.0,
   }),
+  runeRing: () => ({
+    ...BASE_DEFAULTS,
+    id: uid('rune'),
+    type: 'runeRing',
+    speed: 0.2,
+    text: '\u16A0\u16A2\u16A6\u16A8\u16B1\u16B7\u16C1\u16C7\u16D2\u16D6\u16DA\u16DE\u16E1\u16E3\u16E6\u16F0',
+    radius: 1.5,
+    fontSize: 28,
+    font: 'serif',
+    reverse: false,
+    mapping: 'elderFuthark',
+  }),
 }
 
 /** レイヤー種別の表示名 */
@@ -296,4 +320,5 @@ export const LAYER_LABELS: Record<LayerType, string> = {
   spiralArm: 'Spiral（螺旋）',
   pulseRings: 'Pulse（衝撃波）',
   floatingOrbs: 'Orbs（光球）',
+  runeRing: 'Rune Ring（文字環）',
 }

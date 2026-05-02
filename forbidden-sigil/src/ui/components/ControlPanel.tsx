@@ -1,6 +1,8 @@
 import { useSigilStore } from '../../store/useSigilStore'
 import type { LayerConfig, LayerType } from '../../store/layerConfigs'
 import { LAYER_LABELS } from '../../store/layerConfigs'
+import { convertText, RUNE_MAP_LABELS } from '../runeMaps'
+import type { RuneMapKey } from '../runeMaps'
 
 /* ── 共通コンポーネント ── */
 
@@ -243,6 +245,49 @@ function LayerSpecificFields({ config, onUpdate }: {
             onChange={(v) => onUpdate({ pulseSpeed: v })} />
         </>
       )
+    case 'runeRing':
+      return (
+        <>
+          <label>
+            Mapping
+            <select value={config.mapping}
+              onChange={(e) => onUpdate({ mapping: e.target.value })}>
+              {RUNE_MAP_LABELS.map(({ key, label }) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Text
+            <input type="text" value={config.text} style={{
+              width: '100%', marginTop: 4, padding: '4px 6px',
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 4, color: '#ccc', fontSize: 12,
+            }}
+              onChange={(e) => {
+                const val = e.target.value
+                onUpdate({ text: convertText(val, config.mapping as RuneMapKey) })
+              }} />
+          </label>
+          <Slider label="Radius" value={config.radius} min={0.2} max={3} step={0.1}
+            onChange={(v) => onUpdate({ radius: v })} />
+          <Slider label="Font Size" value={config.fontSize} min={12} max={60} step={1}
+            onChange={(v) => onUpdate({ fontSize: v })} />
+          <label>
+            Font
+            <select value={config.font}
+              onChange={(e) => onUpdate({ font: e.target.value })}>
+              <option value="serif">Serif</option>
+              <option value="sans-serif">Sans-serif</option>
+              <option value="monospace">Monospace</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="'Courier New', monospace">Courier New</option>
+            </select>
+          </label>
+          <Toggle label="Reverse" value={config.reverse}
+            onChange={(v) => onUpdate({ reverse: v })} />
+        </>
+      )
   }
 }
 
@@ -250,7 +295,7 @@ const LAYER_TYPES: LayerType[] = [
   'ring', 'polygon', 'starPolygon', 'spokes',
   'concentricRings', 'vertexMarks', 'crescent',
   'dotChain', 'wavePattern', 'spiralArm',
-  'pulseRings', 'floatingOrbs',
+  'pulseRings', 'floatingOrbs', 'runeRing',
 ]
 
 export function ControlPanel() {

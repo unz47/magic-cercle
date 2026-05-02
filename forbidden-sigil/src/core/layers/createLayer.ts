@@ -12,6 +12,7 @@ import { DotChainLayer } from './decorative/DotChainLayer'
 import { WavePatternLayer } from './decorative/WavePatternLayer'
 import { PulseRingsLayer } from './effects/PulseRingsLayer'
 import { FloatingOrbsLayer } from './effects/FloatingOrbsLayer'
+import { RuneRingLayer } from './decorative/RuneRingLayer'
 
 export function createLayer(config: LayerConfig): ILayer {
   switch (config.type) {
@@ -39,5 +40,7 @@ export function createLayer(config: LayerConfig): ILayer {
       return new PulseRingsLayer(config.maxRadius, config.pulseSpeed, config.maxRings, config.thickness, config.color)
     case 'floatingOrbs':
       return new FloatingOrbsLayer(config.count, config.radius, config.height, config.orbSize, config.color)
+    case 'runeRing':
+      return new RuneRingLayer(config.text, config.radius, config.fontSize, config.color, config.font)
   }
 }
