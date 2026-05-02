@@ -292,8 +292,38 @@ export const useSigilStore = create<SigilState>((set, get) => ({
 
   importState: (json) => {
     try {
+      // サイズ制限 (5MB)
+      if (json.length > 5 * 1024 * 1024) return false
+
       const data = JSON.parse(json)
       if (!data.layers || !Array.isArray(data.layers)) return false
+
+      // レイヤー数上限
+      if (data.layers.length > 50) return false
+
+      // 許可されたレイヤータイプ
+      const VALID_TYPES = new Set([
+        'ring', 'polygon', 'starPolygon', 'spokes', 'concentricRings',
+        'vertexMarks', 'crescent', 'dotChain', 'wavePattern', 'spiralArm',
+        'pulseRings', 'floatingOrbs', 'runeRing', 'orbitalShape',
+      ])
+
+      // レイヤーの基本検証
+      for (const layer of data.layers) {
+        if (typeof layer !== 'object' || layer === null) return false
+        if (typeof layer.id !== 'string' || layer.id.length > 100) return false
+        if (!VALID_TYPES.has(layer.type)) return false
+        if (typeof layer.color === 'string' && !/^#[0-9a-fA-F]{3,8}$/.test(layer.color)) return false
+        // プロトタイプ汚染防止
+        if ('__proto__' in layer || 'constructor' in layer || 'prototype' in layer) return false
+      }
+
+      // global設定の検証
+      if (data.global) {
+        if (typeof data.global !== 'object' || data.global === null) return false
+        if (data.global.bgColor && !/^#[0-9a-fA-F]{3,8}$/.test(data.global.bgColor)) return false
+      }
+
       const state = get()
       set(withHistory(state, {
         layers: data.layers,

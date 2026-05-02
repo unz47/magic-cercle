@@ -1,6 +1,29 @@
 import type { LayerConfig } from '../../store/layerConfigs'
 import type { GlobalSettings } from '../../store/useSigilStore'
 
+/** XML特殊文字をエスケープ (XSS防止) */
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+/** 色値が安全な形式か検証 */
+function sanitizeColor(value: string): string {
+  const hex = /^#[0-9a-fA-F]{3,8}$/
+  const rgb = /^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$/
+  if (hex.test(value) || rgb.test(value)) return value
+  return '#ffffff'
+}
+
+/** IDを安全な文字列に制限 */
+function sanitizeId(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, '')
+}
+
 /**
  * レイヤー設定から SVG を生成してダウンロード
  * Three.js の 3D → 2D 平面投影（XZ 平面を真上から見下ろす想定）
@@ -18,9 +41,9 @@ export function exportSvg(
   let paths = ''
 
   for (const layer of layers) {
-    const color = (layer as unknown as Record<string, unknown>).color as string || '#ffffff'
-    const thickness = ((layer as unknown as Record<string, unknown>).thickness as number) || 2
-    const layerRadius = ((layer as unknown as Record<string, unknown>).radius as number) || 1
+    const color = sanitizeColor((layer as unknown as Record<string, unknown>).color as string || '#ffffff')
+    const thickness = Math.max(0, Math.min(20, ((layer as unknown as Record<string, unknown>).thickness as number) || 2))
+    const layerRadius = Math.max(0, Math.min(10, ((layer as unknown as Record<string, unknown>).radius as number) || 1))
 
     switch (layer.type) {
       case 'ring': {
@@ -101,10 +124,12 @@ export function exportSvg(
 
       case 'runeRing': {
         const r = layerRadius * scale
-        const text = (layer as unknown as Record<string, unknown>).text as string || 'ABCDEF'
+        const rawText = (layer as unknown as Record<string, unknown>).text as string || 'ABCDEF'
+        const safeText = escapeXml(rawText)
+        const safeId = sanitizeId(layer.id)
         // テキストをパスに沿って配置
-        paths += `  <defs>\n    <path id="rune-path-${layer.id}" d="M ${cx - r},${cy} a ${r},${r} 0 1,1 ${r * 2},0 a ${r},${r} 0 1,1 -${r * 2},0"/>\n  </defs>\n`
-        paths += `  <text fill="${color}" font-size="14" opacity="0.9">\n    <textPath href="#rune-path-${layer.id}">${text}</textPath>\n  </text>\n`
+        paths += `  <defs>\n    <path id="rune-path-${safeId}" d="M ${cx - r},${cy} a ${r},${r} 0 1,1 ${r * 2},0 a ${r},${r} 0 1,1 -${r * 2},0"/>\n  </defs>\n`
+        paths += `  <text fill="${color}" font-size="14" opacity="0.9">\n    <textPath href="#rune-path-${safeId}">${safeText}</textPath>\n  </text>\n`
         break
       }
 
@@ -117,9 +142,10 @@ export function exportSvg(
     }
   }
 
+  const safeBgColor = sanitizeColor(global.bgColor)
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" fill="${global.bgColor}"/>
+  <rect width="${size}" height="${size}" fill="${safeBgColor}"/>
 ${paths}</svg>
 `
 

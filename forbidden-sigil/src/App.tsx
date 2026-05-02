@@ -65,6 +65,11 @@ function App() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    // ファイルサイズ制限 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File too large (max 5MB)')
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => {
       const json = reader.result as string
