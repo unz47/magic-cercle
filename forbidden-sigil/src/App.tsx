@@ -24,7 +24,7 @@ function App() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `sigil-${Date.now()}.json`
+    a.download = `majicle-${Date.now()}.json`
     a.click()
     URL.revokeObjectURL(url)
     setExportOpen(false)
@@ -115,7 +115,7 @@ function App() {
 
       {/* メニューバー */}
       <div className="menu-bar">
-        <span className="menu-title">Forbidden Sigil</span>
+        <span className="menu-title">Majicle</span>
         <div className="menu-actions">
           <button
             className="menu-toggle"

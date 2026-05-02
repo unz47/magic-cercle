@@ -84,7 +84,7 @@ export async function exportGif(
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = filename ?? `sigil-${Date.now()}.gif`
+  a.download = filename ?? `majicle-${Date.now()}.gif`
   a.click()
   URL.revokeObjectURL(url)
 }

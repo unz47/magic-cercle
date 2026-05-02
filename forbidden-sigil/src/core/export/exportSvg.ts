@@ -153,7 +153,7 @@ ${paths}</svg>
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = filename ?? `sigil-${Date.now()}.svg`
+  a.download = filename ?? `majicle-${Date.now()}.svg`
   a.click()
   URL.revokeObjectURL(url)
 }

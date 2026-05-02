@@ -314,8 +314,8 @@ export const useSigilStore = create<SigilState>((set, get) => ({
         if (typeof layer.id !== 'string' || layer.id.length > 100) return false
         if (!VALID_TYPES.has(layer.type)) return false
         if (typeof layer.color === 'string' && !/^#[0-9a-fA-F]{3,8}$/.test(layer.color)) return false
-        // プロトタイプ汚染防止
-        if ('__proto__' in layer || 'constructor' in layer || 'prototype' in layer) return false
+        // プロトタイプ汚染防止 (自身のプロパティとしてキーを持っている場合のみ拒否)
+        if (Object.prototype.hasOwnProperty.call(layer, '__proto__')) return false
       }
 
       // global設定の検証

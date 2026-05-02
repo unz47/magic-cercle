@@ -10,7 +10,7 @@ export function exportPng(engine: SigilEngine, filename?: string) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = filename ?? `sigil-${Date.now()}.png`
+    a.download = filename ?? `majicle-${Date.now()}.png`
     a.click()
     URL.revokeObjectURL(url)
   }, 'image/png')

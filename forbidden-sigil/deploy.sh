@@ -2,7 +2,7 @@
 set -euo pipefail
 
 #───────────────────────────────────────────────
-# Forbidden Sigil — S3 + CloudFront デプロイ
+# Majicle — S3 + CloudFront デプロイ
 #───────────────────────────────────────────────
 # 使い方:
 #   1. 初回: ./deploy.sh setup
