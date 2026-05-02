@@ -136,6 +136,18 @@ export interface RuneRingConfig extends LayerBase {
   mapping: string       // 変換マッピング名 ('none' | 'elderFuthark' | ...)
 }
 
+/** OrbitalShape — 軌道上に図形を配置 */
+export interface OrbitalShapeConfig extends LayerBase {
+  type: 'orbitalShape'
+  radius: number
+  count: number           // 配置数（1〜24）
+  shapeType: string       // 配置するレイヤーの種別（LayerType）
+  shapeSize: number       // サブレイヤーのスケール（0.05〜1）
+  arcStart: number        // 配置開始位置（0〜1）
+  arcEnd: number          // 配置終了位置（0〜1）
+  alignToOrbit: boolean   // 軌道に沿って回転
+}
+
 /** 全レイヤー設定の判別共用体 */
 export type LayerConfig =
   | RingConfig
@@ -151,6 +163,7 @@ export type LayerConfig =
   | PulseRingsConfig
   | FloatingOrbsConfig
   | RuneRingConfig
+  | OrbitalShapeConfig
 
 /** レイヤー種別 */
 export type LayerType = LayerConfig['type']
@@ -304,6 +317,19 @@ export const LAYER_DEFAULTS: Record<LayerType, () => LayerConfig> = {
     reverse: false,
     mapping: 'elderFuthark',
   }),
+  orbitalShape: () => ({
+    ...BASE_DEFAULTS,
+    id: uid('orbital'),
+    type: 'orbitalShape',
+    speed: 0.3,
+    radius: 1.5,
+    count: 6,
+    shapeType: 'ring',
+    shapeSize: 0.3,
+    arcStart: 0,
+    arcEnd: 1,
+    alignToOrbit: true,
+  }),
 }
 
 /** レイヤー種別の表示名 */
@@ -321,4 +347,5 @@ export const LAYER_LABELS: Record<LayerType, string> = {
   pulseRings: 'Pulse（衝撃波）',
   floatingOrbs: 'Orbs（光球）',
   runeRing: 'Rune Ring（文字環）',
+  orbitalShape: 'Orbital Shape（軌道図形）',
 }

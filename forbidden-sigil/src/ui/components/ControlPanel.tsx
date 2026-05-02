@@ -245,6 +245,32 @@ function LayerSpecificFields({ config, onUpdate }: {
             onChange={(v) => onUpdate({ pulseSpeed: v })} />
         </>
       )
+    case 'orbitalShape':
+      return (
+        <>
+          <Slider label="Radius" value={config.radius} min={0.2} max={3} step={0.1}
+            onChange={(v) => onUpdate({ radius: v })} />
+          <Slider label="Count" value={config.count} min={1} max={24} step={1}
+            onChange={(v) => onUpdate({ count: v })} />
+          <label>
+            Shape Type
+            <select value={config.shapeType}
+              onChange={(e) => onUpdate({ shapeType: e.target.value })}>
+              {LAYER_TYPES.filter(t => t !== 'orbitalShape').map((t) => (
+                <option key={t} value={t}>{LAYER_LABELS[t]}</option>
+              ))}
+            </select>
+          </label>
+          <Slider label="Size" value={config.shapeSize} min={0.05} max={1} step={0.05}
+            onChange={(v) => onUpdate({ shapeSize: v })} />
+          <Slider label="Arc Start" value={config.arcStart} min={0} max={1} step={0.01}
+            onChange={(v) => onUpdate({ arcStart: v })} />
+          <Slider label="Arc End" value={config.arcEnd} min={0} max={1} step={0.01}
+            onChange={(v) => onUpdate({ arcEnd: v })} />
+          <Toggle label="Align to Orbit" value={config.alignToOrbit}
+            onChange={(v) => onUpdate({ alignToOrbit: v })} />
+        </>
+      )
     case 'runeRing':
       return (
         <>
@@ -296,6 +322,7 @@ const LAYER_TYPES: LayerType[] = [
   'concentricRings', 'vertexMarks', 'crescent',
   'dotChain', 'wavePattern', 'spiralArm',
   'pulseRings', 'floatingOrbs', 'runeRing',
+  'orbitalShape',
 ]
 
 export function ControlPanel() {

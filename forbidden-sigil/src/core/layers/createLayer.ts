@@ -1,4 +1,4 @@
-import type { LayerConfig } from '../../store/layerConfigs'
+import type { LayerConfig, LayerType } from '../../store/layerConfigs'
 import type { ILayer } from './ILayer'
 import { RingLayer } from './geometric/RingLayer'
 import { PolygonLayer } from './geometric/PolygonLayer'
@@ -13,6 +13,7 @@ import { WavePatternLayer } from './decorative/WavePatternLayer'
 import { PulseRingsLayer } from './effects/PulseRingsLayer'
 import { FloatingOrbsLayer } from './effects/FloatingOrbsLayer'
 import { RuneRingLayer } from './decorative/RuneRingLayer'
+import { OrbitalShapeLayer } from './decorative/OrbitalShapeLayer'
 
 export function createLayer(config: LayerConfig): ILayer {
   switch (config.type) {
@@ -42,5 +43,7 @@ export function createLayer(config: LayerConfig): ILayer {
       return new FloatingOrbsLayer(config.count, config.radius, config.height, config.orbSize, config.color)
     case 'runeRing':
       return new RuneRingLayer(config.text, config.radius, config.fontSize, config.color, config.font)
+    case 'orbitalShape':
+      return new OrbitalShapeLayer(config.radius, config.count, config.shapeType as LayerType, config.shapeSize, 2, config.color)
   }
 }
