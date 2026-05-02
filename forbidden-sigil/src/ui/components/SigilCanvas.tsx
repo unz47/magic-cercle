@@ -9,6 +9,10 @@ export function SigilCanvas() {
   const dragRef = useRef<{ active: boolean; startX: number; startY: number; startAngle: number; startAzimuth: number }>({
     active: false, startX: 0, startY: 0, startAngle: 0, startAzimuth: 0,
   })
+  // ピンチズーム用
+  const pinchRef = useRef<{ active: boolean; startDist: number; startZoom: number }>({
+    active: false, startDist: 0, startZoom: 5,
+  })
 
   const layers = useSigilStore((s) => s.layers)
   const global = useSigilStore((s) => s.global)
@@ -87,6 +91,53 @@ export function SigilCanvas() {
     const current = useSigilStore.getState().global.cameraDistance
     const newDist = Math.max(2, Math.min(12, current + e.deltaY * 0.005))
     setGlobal({ cameraDistance: newDist })
+  }, [setGlobal])
+
+  // ピンチズーム (モバイル)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const getTouchDist = (t: TouchList) => {
+      const dx = t[0].clientX - t[1].clientX
+      const dy = t[0].clientY - t[1].clientY
+      return Math.sqrt(dx * dx + dy * dy)
+    }
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault()
+        pinchRef.current = {
+          active: true,
+          startDist: getTouchDist(e.touches),
+          startZoom: useSigilStore.getState().global.cameraDistance,
+        }
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && pinchRef.current.active) {
+        e.preventDefault()
+        const currentDist = getTouchDist(e.touches)
+        const scale = pinchRef.current.startDist / currentDist
+        const newZoom = Math.max(2, Math.min(12, pinchRef.current.startZoom * scale))
+        setGlobal({ cameraDistance: newZoom })
+      }
+    }
+
+    const onTouchEnd = () => {
+      pinchRef.current.active = false
+    }
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false })
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+    canvas.addEventListener('touchend', onTouchEnd)
+
+    return () => {
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      canvas.removeEventListener('touchend', onTouchEnd)
+    }
   }, [setGlobal])
 
   return (

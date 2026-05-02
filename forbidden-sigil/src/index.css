@@ -45,9 +45,9 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: rgba(10, 10, 25, 0.7);
+  background: rgba(10, 10, 25, 0.4);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   z-index: 100;
 }
 
@@ -83,6 +83,12 @@ body {
 .menu-toggle:disabled {
   opacity: 0.3;
   cursor: default;
+}
+
+.menu-toggle--active {
+  background: rgba(170, 102, 255, 0.2);
+  border-color: rgba(170, 102, 255, 0.4);
+  color: #bb88ff;
 }
 
 /* ── Export Dropdown ── */
@@ -165,9 +171,9 @@ body {
   width: 220px;
   max-height: calc(100dvh - 68px);
   overflow-y: auto;
-  background: rgba(10, 10, 25, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 25, 0.45);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 16px;
   color: #ccc;
@@ -184,7 +190,7 @@ body {
 }
 
 .effect-group {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 8px 10px;
   margin: 0 0 8px;
@@ -270,9 +276,9 @@ body {
   width: 260px;
   max-height: calc(100dvh - 68px);
   overflow-y: auto;
-  background: rgba(10, 10, 25, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 25, 0.45);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 16px;
   color: #ccc;
@@ -288,7 +294,7 @@ body {
 }
 
 .ring-group {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 10px;
   margin: 0 0 10px;
@@ -453,4 +459,95 @@ body {
   border-radius: 4px;
   color: #ccc;
   font-size: 11px;
+}
+
+/* ══════════════════════════════════════════
+   Mobile (max-width: 768px)
+   ══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* パネル: フルスクリーンオーバーレイ（片方ずつ表示） */
+  .effect-panel,
+  .control-panel {
+    position: fixed;
+    top: 52px;
+    left: 6px;
+    right: 6px;
+    width: auto;
+    max-height: calc(100dvh - 60px);
+    border-radius: 8px;
+    z-index: 90;
+    padding: 12px;
+    font-size: 12px;
+  }
+
+  /* メニューバー */
+  .menu-bar {
+    height: 44px;
+    padding: 0 8px;
+  }
+
+  .menu-title {
+    font-size: 13px;
+  }
+
+  .menu-actions {
+    gap: 4px;
+  }
+
+  .menu-toggle {
+    padding: 6px 8px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+
+  /* タッチターゲットの最小サイズ確保 */
+  .layer-actions button {
+    padding: 8px 0;
+    font-size: 12px;
+    min-height: 36px;
+  }
+
+  .ring-group input[type='range'],
+  .effect-group input[type='range'] {
+    height: 16px;
+    max-width: none;
+  }
+
+  .ring-group input[type='color'],
+  .effect-group input[type='color'] {
+    width: 36px;
+    height: 32px;
+  }
+
+  .effect-toggle input[type='checkbox'],
+  .toggle-label input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .randomize-btn {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+
+  .add-layer select {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+
+  /* Export dropdown */
+  .export-dropdown {
+    position: fixed;
+    top: 44px;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+    min-width: 100%;
+  }
+
+  .export-dropdown button {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
 }

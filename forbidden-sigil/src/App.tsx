@@ -9,14 +9,30 @@ import { exportPng } from './core/export/exportPng'
 import { exportSvg } from './core/export/exportSvg'
 import { exportGif } from './core/export/exportGif'
 
+// モバイル判定 hook
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return isMobile
+}
+
 function App() {
-  const [panelOpen, setPanelOpen] = useState(true)
+  const isMobile = useIsMobile()
+  // モバイルはデフォルトで閉じる
+  const [panelOpen, setPanelOpen] = useState(!window.matchMedia('(max-width: 768px)').matches)
   const [exportOpen, setExportOpen] = useState(false)
   const [gifProgress, setGifProgress] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const exportState = useSigilStore((s) => s.exportState)
   const importState = useSigilStore((s) => s.importState)
-  const { undo, redo, canUndo, canRedo } = useTemporalStore()
+  const { undo, redo } = useTemporalStore()
+  // モバイル: 左右パネルを個別制御
+  const [leftOpen, setLeftOpen] = useState(false)
+  const [rightOpen, setRightOpen] = useState(false)
 
   const handleExportJson = () => {
     const json = exportState()
@@ -82,6 +98,13 @@ function App() {
   }
 
   // キーボードショートカット: Ctrl+Z / Cmd+Z = Undo, Ctrl+Shift+Z / Cmd+Shift+Z = Redo
+  // モバイル: 初回ロード時にカメラを最大限引く
+  useEffect(() => {
+    if (isMobile) {
+      useSigilStore.getState().setGlobal({ cameraDistance: 12 })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const mod = e.metaKey || e.ctrlKey
     if (mod && e.key === 'z' && !e.shiftKey) {
@@ -117,22 +140,6 @@ function App() {
       <div className="menu-bar">
         <span className="menu-title">Majicle</span>
         <div className="menu-actions">
-          <button
-            className="menu-toggle"
-            onClick={() => undo()}
-            disabled={!canUndo}
-            title="Undo (Ctrl+Z)"
-          >
-            Undo
-          </button>
-          <button
-            className="menu-toggle"
-            onClick={() => redo()}
-            disabled={!canRedo}
-            title="Redo (Ctrl+Shift+Z)"
-          >
-            Redo
-          </button>
           <div className="export-menu-wrapper">
             <button
               className="menu-toggle"
@@ -150,12 +157,29 @@ function App() {
             )}
           </div>
           <button className="menu-toggle" onClick={handleImport}>Import</button>
-          <button
-            className="menu-toggle"
-            onClick={() => setPanelOpen(!panelOpen)}
-          >
-            {panelOpen ? 'Hide UI' : 'Show UI'}
-          </button>
+          {isMobile ? (
+            <>
+              <button
+                className={`menu-toggle${leftOpen ? ' menu-toggle--active' : ''}`}
+                onClick={() => setLeftOpen(!leftOpen)}
+              >
+                Effects
+              </button>
+              <button
+                className={`menu-toggle${rightOpen ? ' menu-toggle--active' : ''}`}
+                onClick={() => setRightOpen(!rightOpen)}
+              >
+                Layers
+              </button>
+            </>
+          ) : (
+            <button
+              className="menu-toggle"
+              onClick={() => setPanelOpen(!panelOpen)}
+            >
+              {panelOpen ? 'Hide UI' : 'Show UI'}
+            </button>
+          )}
         </div>
         <input
           ref={fileInputRef}
@@ -174,8 +198,8 @@ function App() {
         </div>
       )}
 
-      {panelOpen && <EffectPanel />}
-      {panelOpen && <ControlPanel />}
+      {(isMobile ? leftOpen : panelOpen) && <EffectPanel />}
+      {(isMobile ? rightOpen : panelOpen) && <ControlPanel />}
     </div>
   )
 }
