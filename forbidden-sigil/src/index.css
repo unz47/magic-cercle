@@ -59,6 +59,11 @@ body {
   text-transform: uppercase;
 }
 
+.menu-actions {
+  display: flex;
+  gap: 6px;
+}
+
 .menu-toggle {
   padding: 4px 12px;
   background: rgba(255, 255, 255, 0.06);

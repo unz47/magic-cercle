@@ -44,6 +44,10 @@ export interface SigilState {
   duplicateLayer: (id: string) => void
   randomizeLayers: () => void
 
+  // インポート/エクスポート
+  exportState: () => string
+  importState: (json: string) => boolean
+
   // グローバル
   setGlobal: (patch: Partial<GlobalSettings>) => void
 
@@ -193,6 +197,27 @@ export const useSigilStore = create<SigilState>((set) => ({
         },
       }
     }),
+
+  exportState: () => {
+    const { layers, global, effects, particles } = useSigilStore.getState()
+    return JSON.stringify({ layers, global, effects, particles }, null, 2)
+  },
+
+  importState: (json) => {
+    try {
+      const data = JSON.parse(json)
+      if (!data.layers || !Array.isArray(data.layers)) return false
+      set({
+        layers: data.layers,
+        ...(data.global && { global: data.global }),
+        ...(data.effects && { effects: data.effects }),
+        ...(data.particles && { particles: data.particles }),
+      })
+      return true
+    } catch {
+      return false
+    }
+  },
 
   setGlobal: (patch) =>
     set((state) => ({
