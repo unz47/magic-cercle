@@ -105,18 +105,18 @@ function ParticleSection() {
 
             {cfg.enabled && (
               <>
-                <Slider label="Count" value={cfg.count} min={10} max={500} step={10}
+                <Slider label="Count" value={cfg.count} min={1} max={1000} step={1}
                   onChange={(v) => setParticle(key, { count: v } as Partial<ParticleSettings[typeof key]>)} />
-                <Slider label="Speed" value={cfg.speed} min={0.05} max={3} step={0.05}
+                <Slider label="Speed" value={cfg.speed} min={0.01} max={10} step={0.01}
                   onChange={(v) => setParticle(key, { speed: v } as Partial<ParticleSettings[typeof key]>)} />
                 {hasRadius ? (
-                  <Slider label="Radius" value={(cfg as { radius: number }).radius} min={0.5} max={4} step={0.1}
+                  <Slider label="Radius" value={(cfg as { radius: number }).radius} min={0.1} max={20} step={0.1}
                     onChange={(v) => setParticle(key, { radius: v } as Partial<ParticleSettings[typeof key]>)} />
                 ) : (
-                  <Slider label="Spread" value={(cfg as { spread: number }).spread} min={0.5} max={6} step={0.1}
+                  <Slider label="Spread" value={(cfg as { spread: number }).spread} min={0.1} max={20} step={0.1}
                     onChange={(v) => setParticle(key, { spread: v } as Partial<ParticleSettings[typeof key]>)} />
                 )}
-                <Slider label="Size" value={cfg.size} min={0.01} max={0.1} step={0.005}
+                <Slider label="Size" value={cfg.size} min={0.005} max={0.5} step={0.005}
                   onChange={(v) => setParticle(key, { size: v } as Partial<ParticleSettings[typeof key]>)} />
                 <label>
                   Color
