@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { SigilEngine } from '../../core/SigilEngine'
+import { setEngineRef } from '../../core/engineRef'
 import { useSigilStore } from '../../store/useSigilStore'
 
 export function SigilCanvas() {
@@ -22,6 +23,7 @@ export function SigilCanvas() {
 
     const engine = new SigilEngine(canvas)
     engineRef.current = engine
+    setEngineRef(engine)
 
     const onResize = () => engine.resize()
     window.addEventListener('resize', onResize)
@@ -30,6 +32,7 @@ export function SigilCanvas() {
       window.removeEventListener('resize', onResize)
       engine.dispose()
       engineRef.current = null
+      setEngineRef(null)
     }
   }, [])
 

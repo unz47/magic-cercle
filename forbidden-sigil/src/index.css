@@ -85,6 +85,78 @@ body {
   cursor: default;
 }
 
+/* ── Export Dropdown ── */
+.export-menu-wrapper {
+  position: relative;
+}
+
+.export-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: rgba(10, 10, 25, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 200;
+  min-width: 80px;
+}
+
+.export-dropdown button {
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.export-dropdown button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ── GIF Progress ── */
+.gif-progress {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 25, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(170, 102, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 200;
+  min-width: 200px;
+}
+
+.gif-progress span {
+  font-size: 12px;
+  color: #bb88ff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gif-progress-bar {
+  height: 4px;
+  background: #aa66ff;
+  border-radius: 2px;
+  transition: width 0.1s;
+  flex: 1;
+}
+
 /* ── Effect Panel (左側) ── */
 .effect-panel {
   position: absolute;

@@ -165,6 +165,37 @@ export class SigilEngine {
     }
   }
 
+  /** 指定時刻で1フレーム描画（エクスポート用） */
+  renderAtTime(time: number) {
+    for (const { layer, speed } of this.layerMap.values()) {
+      layer.update(time * speed)
+    }
+
+    if (this.particleSettings) {
+      for (const [key, ps] of this.particleMap) {
+        const cfg = this.particleSettings[key]
+        const spread = 'spread' in cfg ? (cfg as { spread: number }).spread : 2
+        const radius = 'radius' in cfg ? (cfg as { radius: number }).radius : undefined
+        ps.update(time, cfg.speed, spread, radius)
+      }
+    }
+
+    this.postProcessing.render()
+  }
+
+  /** canvas 要素を取得 */
+  getCanvas(): HTMLCanvasElement {
+    return this.renderer.renderer.domElement
+  }
+
+  /** WebGLRenderer の preserveDrawingBuffer を一時的に有効化してキャプチャ */
+  captureFrame(time?: number): HTMLCanvasElement {
+    // 指定時刻で描画
+    const t = time ?? (performance.now() - this.clock.start) / 1000
+    this.renderAtTime(t)
+    return this.renderer.renderer.domElement
+  }
+
   /** アニメーションループ */
   private animate = () => {
     this.animationId = requestAnimationFrame(this.animate)

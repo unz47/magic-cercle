@@ -4,15 +4,21 @@ import { ControlPanel } from './ui/components/ControlPanel'
 import { EffectPanel } from './ui/components/EffectPanel'
 import { useSigilStore } from './store/useSigilStore'
 import { useTemporalStore } from './store/useTemporalStore'
+import { getEngineRef } from './core/engineRef'
+import { exportPng } from './core/export/exportPng'
+import { exportSvg } from './core/export/exportSvg'
+import { exportGif } from './core/export/exportGif'
 
 function App() {
   const [panelOpen, setPanelOpen] = useState(true)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [gifProgress, setGifProgress] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const exportState = useSigilStore((s) => s.exportState)
   const importState = useSigilStore((s) => s.importState)
   const { undo, redo, canUndo, canRedo } = useTemporalStore()
 
-  const handleExport = () => {
+  const handleExportJson = () => {
     const json = exportState()
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -21,6 +27,35 @@ function App() {
     a.download = `sigil-${Date.now()}.json`
     a.click()
     URL.revokeObjectURL(url)
+    setExportOpen(false)
+  }
+
+  const handleExportPng = () => {
+    const engine = getEngineRef()
+    if (!engine) return
+    exportPng(engine)
+    setExportOpen(false)
+  }
+
+  const handleExportSvg = () => {
+    const { layers, global } = useSigilStore.getState()
+    exportSvg(layers, global)
+    setExportOpen(false)
+  }
+
+  const handleExportGif = async () => {
+    const engine = getEngineRef()
+    if (!engine) return
+    setGifProgress(0)
+    setExportOpen(false)
+    await exportGif(engine, {
+      width: 512,
+      height: 512,
+      duration: 3,
+      fps: 20,
+      onProgress: setGifProgress,
+    })
+    setGifProgress(null)
   }
 
   const handleImport = () => {
@@ -61,6 +96,14 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
+  // エクスポートメニュー外クリックで閉じる
+  useEffect(() => {
+    if (!exportOpen) return
+    const close = () => setExportOpen(false)
+    setTimeout(() => document.addEventListener('click', close), 0)
+    return () => document.removeEventListener('click', close)
+  }, [exportOpen])
+
   return (
     <div className="app">
       <SigilCanvas />
@@ -85,7 +128,22 @@ function App() {
           >
             Redo
           </button>
-          <button className="menu-toggle" onClick={handleExport}>Export</button>
+          <div className="export-menu-wrapper">
+            <button
+              className="menu-toggle"
+              onClick={(e) => { e.stopPropagation(); setExportOpen(!exportOpen) }}
+            >
+              Export
+            </button>
+            {exportOpen && (
+              <div className="export-dropdown" onClick={(e) => e.stopPropagation()}>
+                <button onClick={handleExportPng}>PNG</button>
+                <button onClick={handleExportSvg}>SVG</button>
+                <button onClick={handleExportGif}>GIF</button>
+                <button onClick={handleExportJson}>JSON</button>
+              </div>
+            )}
+          </div>
           <button className="menu-toggle" onClick={handleImport}>Import</button>
           <button
             className="menu-toggle"
@@ -102,6 +160,14 @@ function App() {
           onChange={handleFileChange}
         />
       </div>
+
+      {/* GIF 書き出し進捗 */}
+      {gifProgress !== null && (
+        <div className="gif-progress">
+          <div className="gif-progress-bar" style={{ width: `${gifProgress * 100}%` }} />
+          <span>GIF {Math.floor(gifProgress * 100)}%</span>
+        </div>
+      )}
 
       {panelOpen && <EffectPanel />}
       {panelOpen && <ControlPanel />}

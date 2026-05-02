@@ -11,6 +11,7 @@ export class Renderer {
       canvas,
       antialias: true,
       alpha: true,
+      preserveDrawingBuffer: true,
     })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
