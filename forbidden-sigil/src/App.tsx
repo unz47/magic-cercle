@@ -1,14 +1,16 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import { SigilCanvas } from './ui/components/SigilCanvas'
 import { ControlPanel } from './ui/components/ControlPanel'
 import { EffectPanel } from './ui/components/EffectPanel'
 import { useSigilStore } from './store/useSigilStore'
+import { useTemporalStore } from './store/useTemporalStore'
 
 function App() {
   const [panelOpen, setPanelOpen] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const exportState = useSigilStore((s) => s.exportState)
   const importState = useSigilStore((s) => s.importState)
+  const { undo, redo, canUndo, canRedo } = useTemporalStore()
 
   const handleExport = () => {
     const json = exportState()
@@ -39,6 +41,26 @@ function App() {
     e.target.value = ''
   }
 
+  // キーボードショートカット: Ctrl+Z / Cmd+Z = Undo, Ctrl+Shift+Z / Cmd+Shift+Z = Redo
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    const mod = e.metaKey || e.ctrlKey
+    if (mod && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault()
+      undo()
+    } else if (mod && e.key === 'z' && e.shiftKey) {
+      e.preventDefault()
+      redo()
+    } else if (mod && e.key === 'y') {
+      e.preventDefault()
+      redo()
+    }
+  }, [undo, redo])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
+
   return (
     <div className="app">
       <SigilCanvas />
@@ -47,6 +69,22 @@ function App() {
       <div className="menu-bar">
         <span className="menu-title">Forbidden Sigil</span>
         <div className="menu-actions">
+          <button
+            className="menu-toggle"
+            onClick={() => undo()}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+          >
+            Undo
+          </button>
+          <button
+            className="menu-toggle"
+            onClick={() => redo()}
+            disabled={!canRedo}
+            title="Redo (Ctrl+Shift+Z)"
+          >
+            Redo
+          </button>
           <button className="menu-toggle" onClick={handleExport}>Export</button>
           <button className="menu-toggle" onClick={handleImport}>Import</button>
           <button

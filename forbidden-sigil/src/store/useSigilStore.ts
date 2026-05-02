@@ -30,11 +30,22 @@ export interface ParticleSettings {
 
 export type ParticleKey = keyof ParticleSettings
 
-export interface SigilState {
+/** Undo/Redo 対象のスナップショット */
+export interface SigilSnapshot {
   layers: LayerConfig[]
   global: GlobalSettings
   effects: EffectSettings
   particles: ParticleSettings
+}
+
+export interface SigilState extends SigilSnapshot {
+  // Undo/Redo
+  _past: SigilSnapshot[]
+  _future: SigilSnapshot[]
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
 
   // レイヤー操作
   addLayer: (type: LayerType) => void
@@ -64,7 +75,48 @@ export interface SigilState {
   ) => void
 }
 
-export const useSigilStore = create<SigilState>((set) => ({
+const HISTORY_LIMIT = 50
+const THROTTLE_MS = 400
+
+/** 現在の状態からスナップショットを取得 */
+function getSnapshot(state: SigilState): SigilSnapshot {
+  return {
+    layers: state.layers,
+    global: state.global,
+    effects: state.effects,
+    particles: state.particles,
+  }
+}
+
+/** 履歴に現在の状態を保存してから変更を適用するヘルパー */
+function withHistory(state: SigilState, patch: Partial<SigilSnapshot>): Partial<SigilState> {
+  const past = [...state._past, getSnapshot(state)]
+  if (past.length > HISTORY_LIMIT) past.shift()
+  return {
+    ...patch,
+    _past: past,
+    _future: [],
+    canUndo: true,
+    canRedo: false,
+  }
+}
+
+/**
+ * スロットル付き履歴保存（スライダー操作時に毎フレーム履歴を記録しない）
+ * 最後の保存から THROTTLE_MS 以内の場合は履歴を追加せず値だけ更新
+ */
+let _lastHistoryTime = 0
+function withThrottledHistory(state: SigilState, patch: Partial<SigilSnapshot>): Partial<SigilState> {
+  const now = Date.now()
+  if (now - _lastHistoryTime < THROTTLE_MS) {
+    // 履歴なしで値だけ更新（直前の操作をまとめる）
+    return { ...patch }
+  }
+  _lastHistoryTime = now
+  return withHistory(state, patch)
+}
+
+export const useSigilStore = create<SigilState>((set, get) => ({
   // 初期レイヤー（魔法陣っぽいデフォルト）
   layers: [
     { ...LAYER_DEFAULTS.ring(), id: 'init-ring-outer', radius: 1.8, thickness: 3, speed: 0.5 },
@@ -94,18 +146,52 @@ export const useSigilStore = create<SigilState>((set) => ({
     fallingAsh:    { enabled: false, count: 100, speed: 0.4, spread: 3.0, size: 0.02, color: '#ff8844' },
   },
 
+  // Undo/Redo 状態
+  _past: [],
+  _future: [],
+  canUndo: false,
+  canRedo: false,
+
+  undo: () =>
+    set((state) => {
+      if (state._past.length === 0) return state
+      const past = [...state._past]
+      const previous = past.pop()!
+      return {
+        ...previous,
+        _past: past,
+        _future: [getSnapshot(state), ...state._future],
+        canUndo: past.length > 0,
+        canRedo: true,
+      }
+    }),
+
+  redo: () =>
+    set((state) => {
+      if (state._future.length === 0) return state
+      const future = [...state._future]
+      const next = future.shift()!
+      return {
+        ...next,
+        _past: [...state._past, getSnapshot(state)],
+        _future: future,
+        canUndo: true,
+        canRedo: future.length > 0,
+      }
+    }),
+
   addLayer: (type) =>
-    set((state) => ({
+    set((state) => withHistory(state, {
       layers: [...state.layers, LAYER_DEFAULTS[type]()],
     })),
 
   removeLayer: (id) =>
-    set((state) => ({
+    set((state) => withHistory(state, {
       layers: state.layers.filter((l) => l.id !== id),
     })),
 
   updateLayer: (id, patch) =>
-    set((state) => ({
+    set((state) => withThrottledHistory(state, {
       layers: state.layers.map((l) =>
         l.id === id ? ({ ...l, ...patch } as LayerConfig) : l,
       ),
@@ -119,7 +205,7 @@ export const useSigilStore = create<SigilState>((set) => ({
       const swap = direction === 'up' ? idx - 1 : idx + 1
       if (swap < 0 || swap >= layers.length) return state
       ;[layers[idx], layers[swap]] = [layers[swap], layers[idx]]
-      return { layers }
+      return withHistory(state, { layers })
     }),
 
   duplicateLayer: (id) =>
@@ -130,11 +216,11 @@ export const useSigilStore = create<SigilState>((set) => ({
       const idx = state.layers.indexOf(source)
       const layers = [...state.layers]
       layers.splice(idx + 1, 0, copy)
-      return { layers }
+      return withHistory(state, { layers })
     }),
 
   randomizeLayers: () =>
-    set(() => {
+    set((state) => {
       const types: LayerType[] = [
         'ring', 'polygon', 'starPolygon', 'spokes',
         'concentricRings', 'vertexMarks', 'crescent',
@@ -150,11 +236,12 @@ export const useSigilStore = create<SigilState>((set) => ({
 
       // 必ず外周リングを含める
       const outerRing = LAYER_DEFAULTS.ring()
-      outerRing.radius = 1.6 + Math.random() * 0.6
-      outerRing.thickness = 2 + Math.floor(Math.random() * 3)
-      outerRing.speed = rand(-0.8, 0.8)
-      outerRing.dashed = Math.random() > 0.6
-      outerRing.double = Math.random() > 0.5
+      const or = outerRing as unknown as Record<string, unknown>
+      or.radius = 1.6 + Math.random() * 0.6
+      or.thickness = 2 + Math.floor(Math.random() * 3)
+      or.speed = rand(-0.8, 0.8)
+      or.dashed = Math.random() > 0.6
+      or.double = Math.random() > 0.5
       layers.push(outerRing)
 
       for (let i = 1; i < count; i++) {
@@ -186,7 +273,7 @@ export const useSigilStore = create<SigilState>((set) => ({
 
       // ランダムな背景色
       const bgHue = Math.floor(Math.random() * 360)
-      return {
+      return withHistory(state, {
         layers,
         global: {
           bloomStrength: rand(0.2, 1.2),
@@ -195,11 +282,11 @@ export const useSigilStore = create<SigilState>((set) => ({
           cameraAngle: rand(30, 60),
           cameraAzimuth: rand(-30, 30),
         },
-      }
+      })
     }),
 
   exportState: () => {
-    const { layers, global, effects, particles } = useSigilStore.getState()
+    const { layers, global, effects, particles } = get()
     return JSON.stringify({ layers, global, effects, particles }, null, 2)
   },
 
@@ -207,12 +294,13 @@ export const useSigilStore = create<SigilState>((set) => ({
     try {
       const data = JSON.parse(json)
       if (!data.layers || !Array.isArray(data.layers)) return false
-      set({
+      const state = get()
+      set(withHistory(state, {
         layers: data.layers,
         ...(data.global && { global: data.global }),
         ...(data.effects && { effects: data.effects }),
         ...(data.particles && { particles: data.particles }),
-      })
+      }))
       return true
     } catch {
       return false
@@ -220,12 +308,12 @@ export const useSigilStore = create<SigilState>((set) => ({
   },
 
   setGlobal: (patch) =>
-    set((state) => ({
+    set((state) => withThrottledHistory(state, {
       global: { ...state.global, ...patch },
     })),
 
   setEffect: (key, patch) =>
-    set((state) => ({
+    set((state) => withThrottledHistory(state, {
       effects: {
         ...state.effects,
         [key]: { ...state.effects[key], ...patch },
@@ -233,7 +321,7 @@ export const useSigilStore = create<SigilState>((set) => ({
     })),
 
   setParticle: (key, patch) =>
-    set((state) => ({
+    set((state) => withThrottledHistory(state, {
       particles: {
         ...state.particles,
         [key]: { ...state.particles[key], ...patch },

@@ -19,7 +19,7 @@ export class RuneRingLayer implements ILayer {
   private _fontSize = 28
   private _color = '#ffffff'
   private _font = 'serif'
-  private _letterSpacing = 0    // 追加の文字間隔
+
   private _reverse = false      // 逆方向（時計回り）
 
   constructor(

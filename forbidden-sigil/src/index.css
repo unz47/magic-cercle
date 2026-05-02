@@ -75,9 +75,14 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 
-.menu-toggle:hover {
+.menu-toggle:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
+}
+
+.menu-toggle:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* ── Effect Panel (左側) ── */

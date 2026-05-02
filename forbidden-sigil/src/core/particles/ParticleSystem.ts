@@ -23,10 +23,7 @@ export class ParticleSystem {
   private points: THREE.Points | null = null
   private material: THREE.ShaderMaterial
   private _count = 0
-  private _type: ParticleKey
-
   constructor(type: ParticleKey, count: number, size: number, color: string) {
-    this._type = type
 
     this.material = new THREE.ShaderMaterial({
       uniforms: {
