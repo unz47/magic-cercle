@@ -58,7 +58,7 @@ export class OrbitalShapeLayer implements ILayer {
 
       // サブレイヤーを生成（デフォルト設定ベース）
       const defaultConfig = LAYER_DEFAULTS[this._shapeType]() as LayerConfig
-      ;(defaultConfig as Record<string, unknown>).color = this._color
+      ;(defaultConfig as unknown as Record<string, unknown>).color = this._color
       // orbitalShape の再帰配置は避ける
       if (this._shapeType === 'orbitalShape') continue
       const sub = createLayer(defaultConfig)
