@@ -153,7 +153,7 @@ if [ -f "$DIST_ID_FILE" ]; then
   echo "==> Invalidating CloudFront ($CF_DIST_ID)..."
   aws cloudfront create-invalidation \
     --distribution-id "$CF_DIST_ID" \
-    --paths "/index.html" "/"  \
+    --paths "/index.html" "/" "/robots.txt" "/sitemap.xml" \
     --query 'Invalidation.Id' --output text
   echo "==> Done!"
 elif [ -n "${DIST_ID:-}" ]; then
@@ -162,7 +162,7 @@ elif [ -n "${DIST_ID:-}" ]; then
   echo "==> Invalidating CloudFront ($DIST_ID)..."
   aws cloudfront create-invalidation \
     --distribution-id "$DIST_ID" \
-    --paths "/index.html" "/" \
+    --paths "/index.html" "/" "/robots.txt" "/sitemap.xml" \
     --query 'Invalidation.Id' --output text
   echo "==> Done!"
 else
