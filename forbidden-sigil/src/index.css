@@ -91,6 +91,41 @@ body {
   color: #bb88ff;
 }
 
+.menu-toggle--share {
+  background: rgba(170, 102, 255, 0.12);
+  border-color: rgba(170, 102, 255, 0.3);
+  color: #bb88ff;
+}
+
+.menu-toggle--share:hover {
+  background: rgba(170, 102, 255, 0.25);
+  color: #ddbbff;
+}
+
+/* ── Share Toast ── */
+.share-toast {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(170, 102, 255, 0.9);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 300;
+  pointer-events: none;
+  animation: toast-fade 2s ease-out forwards;
+}
+
+@keyframes toast-fade {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ── Export Dropdown ── */
 .export-menu-wrapper {
   position: relative;

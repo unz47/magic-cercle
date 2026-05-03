@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="100%" stop-color="#050510"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#aa66ff" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#aa66ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <ellipse cx="600" cy="315" rx="420" ry="420" fill="url(#glow)"/>
+  <!-- outer ring -->
+  <circle cx="600" cy="315" r="200" fill="none" stroke="#aa66ff" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="600" cy="315" r="210" fill="none" stroke="#aa66ff" stroke-width="0.5" opacity="0.3"/>
+  <!-- inner ring -->
+  <circle cx="600" cy="315" r="120" fill="none" stroke="#8844dd" stroke-width="1" opacity="0.5"/>
+  <!-- hexagon -->
+  <polygon points="600,115 769.9,217.5 769.9,412.5 600,515 430.1,412.5 430.1,217.5" fill="none" stroke="#aa66ff" stroke-width="1" opacity="0.4"/>
+  <!-- triangle -->
+  <polygon points="600,155 793.2,467.5 406.8,467.5" fill="none" stroke="#bb88ff" stroke-width="0.8" opacity="0.3"/>
+  <!-- spokes -->
+  <line x1="600" y1="115" x2="600" y2="515" stroke="#aa66ff" stroke-width="0.5" opacity="0.2"/>
+  <line x1="430.1" y1="217.5" x2="769.9" y2="412.5" stroke="#aa66ff" stroke-width="0.5" opacity="0.2"/>
+  <line x1="430.1" y1="412.5" x2="769.9" y2="217.5" stroke="#aa66ff" stroke-width="0.5" opacity="0.2"/>
+  <!-- center dot -->
+  <circle cx="600" cy="315" r="4" fill="#bb88ff" opacity="0.8"/>
+  <!-- title -->
+  <text x="600" y="580" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" font-weight="600" fill="#ffffff" opacity="0.8" letter-spacing="4">MAJICLE</text>
+  <text x="600" y="608" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#aa88cc" opacity="0.6" letter-spacing="2">Create Your Magic Circle</text>
+</svg>

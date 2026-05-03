@@ -8,6 +8,7 @@ import { getEngineRef } from './core/engineRef'
 import { exportPng } from './core/export/exportPng'
 import { exportSvg } from './core/export/exportSvg'
 import { exportGif } from './core/export/exportGif'
+import { buildShareUrl, loadStateFromUrl } from './core/urlShare'
 
 // モバイル判定 hook
 function useIsMobile() {
@@ -33,6 +34,7 @@ function App() {
   // モバイル: 左右パネルを個別制御
   const [leftOpen, setLeftOpen] = useState(false)
   const [rightOpen, setRightOpen] = useState(false)
+  const [shareToast, setShareToast] = useState<string | null>(null)
 
   const handleExportJson = () => {
     const json = exportState()
@@ -97,7 +99,39 @@ function App() {
     e.target.value = ''
   }
 
-  // キーボードショートカット: Ctrl+Z / Cmd+Z = Undo, Ctrl+Shift+Z / Cmd+Shift+Z = Redo
+  // Share: URL に state を埋め込んでコピー / Web Share
+  const handleShare = async () => {
+    const json = exportState()
+    const url = await buildShareUrl(json)
+    const shareData = { title: 'Majicle', text: 'Check out my magic circle!', url }
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData)
+        return
+      } catch {
+        // ユーザーがキャンセルした場合 → フォールバック
+      }
+    }
+    // clipboard fallback
+    await navigator.clipboard.writeText(url)
+    setShareToast('URL copied!')
+    setTimeout(() => setShareToast(null), 2000)
+  }
+
+  // URL hash から state を読み込み
+  useEffect(() => {
+    loadStateFromUrl().then((json) => {
+      if (json) {
+        const ok = importState(json)
+        if (ok) {
+          // hash を消す（ブラウザ履歴を汚さない）
+          history.replaceState(null, '', window.location.pathname)
+        }
+      }
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // モバイル: 初回ロード時にカメラを最大限引く
   useEffect(() => {
     if (isMobile) {
@@ -157,6 +191,7 @@ function App() {
             )}
           </div>
           <button className="menu-toggle" onClick={handleImport}>Import</button>
+          <button className="menu-toggle menu-toggle--share" onClick={handleShare}>Share</button>
           {isMobile ? (
             <>
               <button
@@ -196,6 +231,11 @@ function App() {
           <div className="gif-progress-bar" style={{ width: `${gifProgress * 100}%` }} />
           <span>GIF {Math.floor(gifProgress * 100)}%</span>
         </div>
+      )}
+
+      {/* Share toast */}
+      {shareToast && (
+        <div className="share-toast">{shareToast}</div>
       )}
 
       {(isMobile ? leftOpen : panelOpen) && <EffectPanel />}
